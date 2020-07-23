@@ -7,7 +7,11 @@
 static MyRegisterState ** registers = NULL;
 static uint32_t registersCount = 0;
 
-static unsigned char (*add_random)() = &rand;
+static unsigned char default_rand() {
+	return rand() % 2;
+}
+
+static unsigned char (*add_random)() = &default_rand;
 
 static uint16_t bytes_by_byte_even[256 * 256] = { 0 };
 static uint16_t bytes_by_byte_odd[256 * 256] = { 0 };
