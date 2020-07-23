@@ -75,15 +75,18 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 	last_bit += bits;
 	while (last_bit >= period_random) {
 		last_bit -= period_random;
+		unsigned char old_bit = (result >> last_bit) & 1;
+		unsigned char new_bit = (*add_random)();
+		*current_odd ^= new_bit ^ old_bit;
 		result &= UINT32_MAX - (1 << last_bit);
-		result |= (*add_random)() << last_bit;
+		result |= new_bit << last_bit;
 	}
 	if (is_last_block) {
 		input[current_block] = ((input[current_block] & (UINT32_MAX << current_offset_after_last_block)) |
 			(result >> current_offset_in_last_block)) &
 			(UINT32_MAX >> difference_between_last_block);
 		input[0] = (input[0] & (UINT32_MAX >> current_offset_in_last_block)) |
-			(result << current_offset_in_next_block);
+			(result << current_offset_after_last_block);
 	} else {
 		if (current_offset == 0) {
 			input[current_block] = result;
