@@ -50,14 +50,14 @@ static uint32_t generateMy(uint32_t* input, uint32_t number_of_blocks, unsigned 
 	unsigned char is_last_block = current_block == (number_of_blocks - 1);
 	unsigned char is_pre_last_block = current_block == (number_of_blocks - 2);
 	unsigned char difference_between_last_block = bits - bits_in_last_block;
-	unsigned char current_offset_after_last_block = bits_in_last_block - current_offset;
+	signed char current_offset_after_last_block = bits_in_last_block - current_offset;
 	unsigned char current_offset_in_last_block = bits - current_offset_after_last_block;
 	unsigned char current_offset_in_next_block = bits - current_offset;
 	if (is_last_block) {
 		if (current_offset == 0) {
 			last_byte = (input[current_block] << difference_between_last_block) + (input[0] >> bits_in_last_block);
 		} else {
-			last_byte = (input[current_block] << current_offset_after_last_block) + (input[0] >> current_offset_after_last_block);
+			last_byte = (input[current_block] << current_offset_in_last_block) + (input[0] >> current_offset_after_last_block);
 		}
 	} else {
 		if (current_offset == 0) {
