@@ -152,8 +152,8 @@ void mySRandFromStates(uint32_t paramsLength, MyRegisterState ** states) {
 void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 	if (registers == NULL) {
 		init_tables();
-		srand(0);
 	}
+	srand(0);
 	MyRegisterState** states = (MyRegisterState**)malloc(paramsLength * sizeof(MyRegisterState*));
 	for (uint32_t i = 0; i < paramsLength; i++) {
 		states[i] = (MyRegisterState*)malloc(sizeof(MyRegisterState));
