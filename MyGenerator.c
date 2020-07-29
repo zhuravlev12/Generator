@@ -169,8 +169,6 @@ void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 			}
 		}
 		sequence[state->number_of_blocks - 1] &= UINT32_MAX << (bits - state->bits_in_last_block);
-		state->number_of_blocks = ceil(params[i] / 8.0);
-		state->bits_in_last_block = params[i] % 8;
 		state->sequence = (unsigned char*)sequence;
 		state->current_block = 0;
 		state->current_offset = 0;
@@ -182,6 +180,8 @@ void mySRandFromSeed(uint32_t paramsLength, uint32_t* params, uint32_t* seed) {
 			}
 		}
 		state->current_odd = current_odd;
+		state->number_of_blocks = ceil(params[i] / 8.0);
+		state->bits_in_last_block = params[i] % 8;
 	}
 	mySRandFromStates(paramsLength, states);
 	free(states);
