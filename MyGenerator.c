@@ -8,7 +8,7 @@ static MyRegisterState ** registers = NULL;
 static uint32_t registersCount = 0;
 
 static unsigned char default_rand() {
-	return rand() % 2;
+	return rand() & 1;
 }
 
 static unsigned char (*add_random)() = &default_rand;
@@ -30,7 +30,7 @@ static uint16_t getByte(uint16_t last_byte, uint16_t current_odd) {
 static uint32_t getResult(uint32_t last_bytes, unsigned char* current_odd) {
 	uint32_t result = 0;
 	unsigned char new_odd = *current_odd;
-	uint16_t cur_byte = last_bytes >> 16;
+	uint16_t cur_byte = last_bytes >> half_bits;
 	result |= getByte(cur_byte, new_odd);
 	new_odd ^= change_odd_by_byte[cur_byte];	
 	result <<= half_bits;
@@ -43,35 +43,36 @@ static uint32_t getResult(uint32_t last_bytes, unsigned char* current_odd) {
 
 static uint32_t getFrom(unsigned char * input, int32_t bits_before_end, uint32_t current_block,	unsigned char current_offset) {
 	if (bits_before_end >= 0) {
-		return *((uint64_t*)(&(input[current_block]))) >> (bits - current_offset);
+		return *((uint64_t*)(input + current_block)) >> (bits - current_offset);
 	}
-	return *((uint32_t*)(&(input[current_block]))) << -bits_before_end | *((uint32_t*)(&(input[0]))) >> (bits + bits_before_end);
+	return *((uint32_t*)(input + current_block)) << -bits_before_end | *((uint32_t*)(input)) >> (bits + bits_before_end);
 }
 
 static void setTo(unsigned char * input, int32_t bits_before_end, uint32_t current_block, unsigned char current_offset,	uint32_t result) {
+	unsigned char * current_address = input + current_block;
 	if (bits_before_end >= 0) {
-		unsigned char offset = (bits - current_offset);
-		uint64_t word = *((uint64_t*)(&(input[current_block])));
+		unsigned char offset = bits - current_offset;
+		uint64_t word = *((uint64_t*)(current_address));
 		word &= UINT64_MAX ^ (((uint64_t)UINT32_MAX) << offset);
 		word |= ((uint64_t)result) << offset;
-		*((uint64_t*)(&(input[current_block]))) = word;
+		*((uint64_t*)(current_address)) = word;
 		return;
 	}
 	unsigned char begin_offset = bits + bits_before_end;
 	unsigned char end_offset = -bits_before_end;
-	uint32_t begin_word = *((uint32_t*)(&(input[0])));
+	uint32_t begin_word = *((uint32_t*)(input));
 	begin_word &= UINT32_MAX >> end_offset;
 	begin_word |= result << begin_offset;
-	*((uint32_t*)(&(input[0]))) = begin_word;
-	uint32_t end_word = *((uint32_t*)(&(input[current_block])));
+	*((uint32_t*)(input)) = begin_word;
+	uint32_t end_word = *((uint32_t*)(current_address));
 	end_word &= UINT32_MAX << begin_offset;
 	end_word |= result >> end_offset;
-	*((uint32_t*)(&(input[current_block]))) = end_word;
+	*((uint32_t*)(current_address)) = end_word;
 }
 
 static uint32_t generateMy(unsigned char * input, uint32_t number_of_blocks, unsigned char bits_in_last_block, uint32_t current_block,
 	unsigned char current_offset, uint32_t period_random, uint32_t last_bit, unsigned char* current_odd) {
-	int32_t bits_before_end = ((number_of_blocks - 1) * 8 + bits_in_last_block) - ((current_block + 4) * 8 + current_offset);
+	int32_t bits_before_end = (((number_of_blocks - 1) * 8) + bits_in_last_block) - (((current_block + 4) * 8) + current_offset);
 	uint32_t result = getFrom(input,bits_before_end, current_block, current_offset);
 	if (last_bit >= period_random) {
 		uint32_t bit = bits - (last_bit - period_random) - 1;
