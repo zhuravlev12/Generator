@@ -177,7 +177,7 @@ int main(int argc, char ** argv) {
 			}
 		}
 	}
-	for (uint32_t i = 0; i < length / sizeof(uint32_t); i += sizeof(uint32_t)) {
+	for (uint32_t i = 0; i < length; i += sizeof(uint32_t)) {
 		uint32_t random = myRand();
 		if (print_bits == 0) {
 			fwrite(&random, sizeof(uint32_t), 1, output);
