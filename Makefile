@@ -1,2 +1,2 @@
 build:
-	gcc -O2 MyGenerator.c GeneratorConsole.c
+	gcc -O3 -fopenmp -march=native MyGenerator.c GeneratorConsole.c

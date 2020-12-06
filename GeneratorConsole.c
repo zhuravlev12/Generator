@@ -14,7 +14,7 @@ void help() {
 [-i%%FILENAME%%] - input file with seed\n\
 [-o%%FILENAME%%] - output file to print output generated sequence\n\
 -l%%NUMBER%% - length of output sequence (in bytes)\n\
-[-n%%NUMBER%%] - number of steps, if you want to use default parameters (maximum 7)\n\
+[-n%%NUMBER%%] - number of steps, if you want to use default parameters (maximum 4)\n\
 after these params you can insert params for steps of PRNG (in bits), if you weren't used -n param");
 }
 
@@ -59,7 +59,7 @@ int main(int argc, char ** argv) {
 		scanf("%d", &length);
 		printf("Do you want to use default parameters? (y/n)\n");
 		if (ask()) {
-			printf("Enter number of steps (maximum 7): ");
+			printf("Enter number of steps (maximum 4): ");
 			scanf("%d", &number_of_steps);
 		} else {
 			printf("Do you want to use file for seed? (y/n)\n");
@@ -154,31 +154,36 @@ int main(int argc, char ** argv) {
 			}
 		}
 	}
+	MyGeneratorInitStruct * init = (MyGeneratorInitStruct*)calloc(1, sizeof(MyGeneratorInitStruct));
 	if (number_of_steps != -1) {
-		mySRand(number_of_steps);
+		init->params_length = number_of_steps;
 	} else {
+		init->params_length = params_length;
+		init->params = params;
 		if (input != NULL) {
 			fseek(input, 0, SEEK_END);
 			size_t file_length = ftell(input);
 			uint32_t* seed = (uint32_t*)malloc(file_length);
 			fread(seed, 1, file_length, input);
-			mySRandFromSeed(params_length, params, seed);
-			free(seed);
 			fclose(input);
+			init->seed = seed;
 		} else {
 			if (seed_number != 0) {
 				uint32_t* seed = (uint32_t*)malloc(sizeof(uint32_t));
 				seed[0] = seed_number;
-				params[0] = 1;
-				mySRandFromSeed(params_length, params, seed);
-				free(seed);
-			} else {
-				mySRandFromParams(params_length, params);
+				params[0] = 1;				
+				init->seed = seed;
 			}
 		}
 	}
+	init->iterative_mode = 1;
+	mysrand(*init);
+	if (init->seed != NULL) {
+		free(init->seed);
+	}
+	free(init);
 	for (uint32_t i = 0; i < length; i += sizeof(uint32_t)) {
-		uint32_t random = myRand();
+		uint32_t random = myrand();
 		if (print_bits == 0) {
 			fwrite(&random, sizeof(uint32_t), 1, output);
 		} else {
